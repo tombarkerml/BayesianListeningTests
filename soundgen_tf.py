@@ -101,7 +101,7 @@ def get_freqs_powers(input_vec):  # no loops power array
     num_elements = 5
 
     fund = input_vec[:, 0]
-    n_harmonics = input_vec[:, 1]
+    n_harmonics = tf.math.round(input_vec[:, 1])
     detune_hz = input_vec[:, 2]
     harmonic_power = input_vec[:, 3]
 
