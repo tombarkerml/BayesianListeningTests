@@ -87,5 +87,11 @@ inputs = tf.keras.Input(shape=(4,), dtype='float32')
 output= tf.keras.layers.Lambda(params_to_waveform, trainable=False) (inputs)
 model = tf.keras.Model(inputs=inputs, outputs=output)
 
+import tensorflowjs as tfjs
+
+tfjs.converters.save_keras_model(model, 'js_output')
 
 v=500
+
+
+tf.saved_model.save(params_to_waveform)
