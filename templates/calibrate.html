@@ -3,46 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <title>Calibration</title>
+    <link rel="stylesheet" href="static/styling.css">
 </head>
 <body>
 
-We will now calibrate the audio.
+<div class="introtext">
+    <p>
+    We will now calibrate the audio.
 
-Please check that the volume of your sound reproduction system is set to a sensible level.
+    <p>
+    Please check that the volume of your sound reproduction system is set to a sensible level.
 
-When you are ready, please click 'Play Sound' and move the slider to the HIGHEST position possible where you are able to hear the NOISE
-clearly, but at a COMFORTABLE listening level. You may adjust your system master playback volume if necessary.
+    <p>
+    When you are ready, please click 'Play Sound' and move the slider to the <b>highest</b> position possible where you are able to hear the <b>noise</b>
+    clearly, but at a <b>comfortable</b> listening level. You should adjust your <b>system</b> playback volume to achieve this, as well as the slider.
 
-Also please let us know if you are taking the test via headphones or over loudspeakers.
 
-<br>
-<div style="visibility: hidden", id="sliderDiv">
+    <br>
+    <div style="visibility: hidden", id="sliderDiv">
 
-<input type="range" min="0" max="1" value="0" step="0.01" class="slider" id="rangeCalibrate", name="Slider">
+    <input type="range" min="0" max="1" value="0" step="0.01" class="slider" id="rangeCalibrate", name="Slider">
+    <p><b>Volume Control Slider</b>
+        <br>Set the slider above to maximum, and control listening volume with <b>system</b> volume control.
 
+    </div>
+    <button onclick="startAudio()">Start Audio</button>
+
+
+    <p>
+    Also please let us know if you are taking the test via headphones or over loudspeakers.
+
+
+    <form method=post action="">
+        {% for subfield in form.radio_group %}
+        <p>
+            {{ subfield }}
+            {{ subfield.label }}
+        </p>
+        {% endfor %}
+
+      <div style="visibility: hidden">
+            {{ form.f }}
+            </div>
+       <div style="visibility: hidden", id="submitButtonDiv">
+      <input type=submit value=Submit id="submitButton">
+            </div>
+        </form>
 
 </div>
-<button onclick="startAudio()">Start Audio</button> <button onclick="stopAudio()">Stop Audio</button>
-
-
-
-<form method=post action="">
-    {% for subfield in form.radio_group %}
-    <p>
-        {{ subfield }}
-        {{ subfield.label }}
-    </p>
-    {% endfor %}
-
-  <div style="visibility: hidden">
-        {{ form.f }}
-        </div>
-   <div style="visibility: hidden", id="submitButtonDiv">
-  <input type=submit value=Submit id="submitButton">
-        </div>
-    </form>
-
-
 
  <script>
      var audioCtx = new (window.AudioContext || window.webkitAudioContext)();

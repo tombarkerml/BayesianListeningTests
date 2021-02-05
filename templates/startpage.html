@@ -2,20 +2,92 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Welcome</title>
+    <link rel="stylesheet" href="static/styling.css">
 </head>
 <body>
 
-<pre>{{ content }}</pre>
+<div class="introtext">
+    <p>
+    Hello and welcome to the test!
+    <p>
+    Please read these instructions carefully before going forward.
 
-  <button onclick="PROGRESS()">Continue</button>
+    <p>
+    This test is designed as part of a pilot study into the generation algorithm for signals
+    used in alarm systems. By taking part, you will contribute to the study, and provide valuable
+    data which is used to evaluate the effectiveness of the algorithm being developed.
+    <p>
+    How the test works:
+    <p>
+    You will be presented with sounds over either 10, 30 or 50 trials, <b>twice</b>.
+    <p>
+    The trial will consist of listening to some <b>noise</b> and adjusting a slider until you hear a <b>tone</b>.
+
+    <p>
+    Your aim is to adjust the volume of the <b>tone</b>
+    until it is <b>just</b> audible over the <b>noise</b>.
+
+    <p>
+    You will perform the test in 2 rounds, and there will be a short pause between each round.
+
+    <p>
+    On the next page, there will be a small training example, and a chance for you to calibrate your
+    audio levels and listening.
+
+    You participation is appreciated.
+
+    If you do not wish to take part, please simply close this browser window.
+
+    You may exit the test at any time by closing the browser window.
+
+    <p>
+     <button onclick="PROGRESS()">Continue</button>
+
+    <p> This listening test is run as part of the PATERSON project at Universidade do Minho, Portugal.
+    <p> For contact information and data policy, please click here</p>
+
+    <button class="button" id="policyClick">Policy</button>
+
+
+
+</div>
+
+<div id="instructions" class="introtext" hidden>
+    <p>
+    This test has been configured by Tom Barker from Universidade do Minho.
+        <p>
+    No identifiable data will be stored. The data that will be recored is a numerical value related to each response you give
+    (e.g. '0.670') and a unique random identifier for each test subject (e.g. 'agMmPbdYlVCQ').
+
+    <p>
+    Any questions please contact tom.barker@algoritmi.uminho.pt
+</p>
+
+
+        <br>
+        <button class="button" id="closeButton">Close</button>
+    </div>
 
 
 <script>
 
+    document.getElementById("policyClick")
+        .addEventListener("click", function() {
+            document.getElementById("instructions").hidden = false;
+            }, false);
+
     function PROGRESS() {
     location.href = '{{next_page}}';
 }
+
+
+    document.getElementById("closeButton")
+            .addEventListener("click", function() {
+                document.getElementById("instructions").hidden = true;
+                }, false);
+
+
 </script>
 
 </body>
