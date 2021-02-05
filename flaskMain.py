@@ -135,7 +135,7 @@ def session_optimizer():
     if 'opt' in session:
         return session.get('opt')
     else:
-        session['opt'] = jsonpickle.encode(Optimizer([(-2.0, 2.0), (-2.0, 2.0)], "GP", acq_func="EI",
+        session['opt'] = jsonpickle.encode(Optimizer([(-3.0, 3.0), (-3.0, 3.0)], "GP", acq_func="EI",
                         acq_optimizer="sampling",
                         initial_point_generator="lhs"))
         return session.get('opt')
