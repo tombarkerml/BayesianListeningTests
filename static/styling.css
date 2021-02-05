@@ -31,13 +31,20 @@
   font: 16px "Open Sans", Helvetica, Arial, sans-serif;
   border: 1px solid #22d;
   padding: 12px;
-  width: 500px;
+  width: 75%;
   text-align: center;
 }
 
 
 div.introtext {
   width: 500px;
+  margin: auto;
+  border: 3px solid #73AD21;
+  text-align: center;
+}
+
+div.testContainer {
+  width: 75%;
   margin: auto;
   border: 3px solid #73AD21;
   text-align: center;
