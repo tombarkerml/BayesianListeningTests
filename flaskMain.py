@@ -30,6 +30,7 @@ Session(app)
 app.config['SECRET_KEY'] = 'This_is_the_secret_key_12243523225907662'
 
 SAMPLE_SPREADSHEET_ID = '1P_wU0rU6_rdw0WBomkZm8Ofbkv4AG96N8hmvMo2gXKc'
+#SAMPLE_SPREADSHEET_ID = '1JGRd59WRZ7nr6cgwKJz_IKicDfZutj2UtcjHkC5IOBk'
 results_sheet = Sheets_IO(SAMPLE_SPREADSHEET_ID)
 
 
@@ -88,7 +89,7 @@ def highdim_trial_number():
 
 
 
-SAMPLE_SPREADSHEET_ID = '1JGRd59WRZ7nr6cgwKJz_IKicDfZutj2UtcjHkC5IOBk'
+
 results_sheet = Sheets_IO(SAMPLE_SPREADSHEET_ID)
 
 num_responses = 0
