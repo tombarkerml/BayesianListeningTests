@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calibration</title>
+</head>
+<body>
+
+We will now calibrate the audio.
+
+Please check that the volume of your sound reproduction system is set to a sensible level.
+
+When you are ready, please click 'Play Sound' and move the slider to the HIGHEST position possible where you are able to hear the NOISE
+clearly, but at a COMFORTABLE listening level. You may adjust your system master playback volume if necessary.
+
+Also please let us know if you are taking the test via headphones or over loudspeakers.
+
+<br>
+<div style="visibility: hidden", id="sliderDiv">
+
+<input type="range" min="0" max="1" value="0" step="0.01" class="slider" id="rangeCalibrate", name="Slider">
+
+
+</div>
+<button onclick="startAudio()">Start Audio</button> <button onclick="stopAudio()">Stop Audio</button>
+
+
+
+<form method=post action="">
+    {% for subfield in form.radio_group %}
+    <p>
+        {{ subfield }}
+        {{ subfield.label }}
+    </p>
+    {% endfor %}
+
+  <div style="visibility: hidden">
+        {{ form.f }}
+        </div>
+   <div style="visibility: hidden", id="submitButtonDiv">
+  <input type=submit value=Submit id="submitButton">
+        </div>
+    </form>
+
+
+
+ <script>
+     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+
+      function startAudio() {
+
+            audioCtx.resume().then(() => {
+                console.log('Playback resumed successfully');
+            });
+            makeSubmitVisible();
+        }
+
+     function makeSubmitVisible(){
+            divElem = document.getElementById('submitButtonDiv');
+            divElem.style.visibility = "visible";
+
+            divSlider = document.getElementById('sliderDiv');
+            divSlider.style.visibility = "visible";
+
+        }
+
+     //Make the white noise
+    var bufferSize = 4 * audioCtx.sampleRate,
+    noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate),
+    output = noiseBuffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+        }
+
+    var whiteNoise = audioCtx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+    whiteNoise.loop = true;
+    whiteNoise.start(0);
+
+    var gainCalibration = audioCtx.createGain();
+
+    whiteNoise.connect(gainCalibration);
+    gainCalibration.connect(audioCtx.destination);
+
+    var masterSlider = document.getElementById('rangeCalibrate');
+
+    updateMaster = function (event){
+        master = masterSlider.value;
+        //document.getElementById('valueToUpdateMaster').innerHTML = master;
+        gainCalibration.gain.value = master;
+        document.getElementById("f").value = master;
+        }
+
+    masterSlider.addEventListener('input', updateMaster);
+    updateMaster();
+
+ </script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="static/styling.css">
+</head>
+<body>
+
+<!-- <h1> {{vals}} </h1> -->
+<h1> Trial Number {{trial}} from {{n_trials}}</h1>
+
+    <!--<input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="rangeGain", name="Slider">
+    Gain is : <span id="valueToUpdateGain">unset</span>
+    <br>
+
+    <input type="range" min="100" max="1000" value="400" step="1" class="slider" id="rangeFund", name="Slider">
+    Fundamental is  : <span id="valueToUpdateFund">unset</span>
+    <br>-->
+
+    <input type="range" min="0" max="{{slider_range}}" value="0" step="0.001" class="slider" id="rangeMaster", name="Slider">
+    Master volume control. <!-- <span id="valueToUpdateMaster">unset</span> -->
+    <br>
+
+    <button onclick="startAudio()">Start Audio</button> <button onclick="stopAudio()">Stop Audio</button>
+
+
+    <form method=post action="">
+  <div style="visibility: hidden">
+        {{ form.r }}
+        </div>
+   <div style="visibility: hidden", id="submitButtonDiv">
+  <input type=submit value=Submit id="submitButton">
+        </div>
+    </form>
+
+    <button class="button" id="instructionsButton">Instructions</button>
+
+    <div id="instructions" class="panel" hidden>
+        {{content}}
+        <br>
+        <button class="button" id="closeButton">Close</button>
+    </div>
+
+
+    <script>
+
+        document.getElementById("instructionsButton")
+        .addEventListener("click", function() {
+            document.getElementById("instructions").hidden = false;
+            }, false);
+
+         document.getElementById("closeButton")
+        .addEventListener("click", function() {
+            document.getElementById("instructions").hidden = true;
+            }, false);
+
+
+        //This is the script that sets up oscilators etc
+
+        //var oscillatorVals = {{vals}};
+
+        //var oscillatorVals = {{vals|tojson}};
+        //var oscillatorVals = [1000, 2000, 3000, 0, 0, 1, 0.5, 0.5, 0,0 ];
+        var oscillatorVals = {{vals}};
+
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx.suspend()
+
+        function startAudio() {
+
+            audioCtx.resume().then(() => {
+                console.log('Playback resumed successfully');
+            });
+            makeSubmitVisible();
+        }
+
+         function makeSubmitVisible(){
+            divElem = document.getElementById('submitButtonDiv');
+            divElem.style.visibility = "visible";
+
+        }
+
+        function  stopAudio() {
+            audioCtx.suspend()
+
+        }
+
+        var noiseGain = {{noise_vol}}
+
+        var bufferSize = 4 * audioCtx.sampleRate,
+        noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate),
+        output = noiseBuffer.getChannelData(0);
+        for (var i = 0; i < bufferSize; i++) {
+            output[i] = noiseGain * Math.random() * 2 - 1;
+        }
+
+        var whiteNoise = audioCtx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+        whiteNoise.start(0);
+
+
+
+
+
+
+
+        var oscMaster = audioCtx.createOscillator();
+        var gainNodeMaster = audioCtx.createGain();
+
+        var gainNodeMasterOutput = audioCtx.createGain();
+        gainNodeMasterOutput.connect(audioCtx.destination);
+        gainNodeMasterOutput.gain.value = {{calib_vol}};
+
+        whiteNoise.connect(gainNodeMasterOutput);
+        gainNodeMaster.connect(gainNodeMasterOutput)
+
+
+
+
+
+        // create Oscillator node
+        var osc1 = audioCtx.createOscillator();
+        var osc2 = audioCtx.createOscillator();
+        var osc3 = audioCtx.createOscillator();
+        var osc4 = audioCtx.createOscillator();
+        var osc5 = audioCtx.createOscillator();
+
+
+        var gainNode1 = audioCtx.createGain();
+        var gainNode2 = audioCtx.createGain();
+        var gainNode3 = audioCtx.createGain();
+        var gainNode4 = audioCtx.createGain();
+        var gainNode5 = audioCtx.createGain();
+
+
+
+
+        function connectOscillator(oscillator, gainNode){
+            oscillator.type = 'sine'
+            oscillator.frequency.value=440;
+            oscillator.connect(gainNode)
+            oscillator.start();
+            gainNode.gain.value=1;
+            gainNode.connect(gainNodeMaster)
+        }
+
+        connectOscillator(osc1, gainNode1)
+        connectOscillator(osc2, gainNode2)
+        connectOscillator(osc3, gainNode3)
+        connectOscillator(osc4, gainNode4)
+        connectOscillator(osc5, gainNode5)
+
+        //connectOscillator(oscMaster, gainNodeMaster)
+
+
+
+
+        function setOscillators(pitchAndGain){
+            //pitchAndGain is a vector with first 5 elements giving the pitch for ocilators, and the next 5 giving the gains.
+
+
+            console.log('Setting pitch and gain inside setOscillators:')
+            console.log(pitchAndGain)
+
+            osc1.frequency.value=pitchAndGain[0];
+            osc2.frequency.value=pitchAndGain[1];
+            osc3.frequency.value=pitchAndGain[2];
+            osc4.frequency.value=pitchAndGain[3];
+            osc5.frequency.value=pitchAndGain[4];
+
+            gainNode1.gain.value = pitchAndGain[5];
+            gainNode2.gain.value = pitchAndGain[6];
+            gainNode3.gain.value = pitchAndGain[7];
+            gainNode4.gain.value = pitchAndGain[8];
+            gainNode5.gain.value = pitchAndGain[9];
+
+        }
+
+        setOscillators(oscillatorVals)
+
+        var readyToUpdate=true;
+
+        //Code to get values from sliders
+
+        var gainSlider = document.getElementById('rangeGain');
+        var fundSlider = document.getElementById('rangeFund');
+        var masterSlider = document.getElementById('rangeMaster');
+        var formField = document.getElementById('r');
+
+
+        updateMaster = function (event){
+            master = masterSlider.value;
+            //document.getElementById('valueToUpdateMaster').innerHTML = master;
+            gainNodeMaster.gain.value = 0.05*master;
+            document.getElementById("r").value = master;
+        }
+
+
+        updatePitch = function(event) {
+        if (readyToUpdate == true)
+        {
+            //readyToUpdate = false;
+            gain = gainSlider.value;
+            fund = fundSlider.value;
+            var rangeCorrection = 5; //offset to make the range run +-1
+
+            document.getElementById('valueToUpdateGain').innerHTML = gain;
+            document.getElementById('valueToUpdateFund').innerHTML = fund;
+
+
+            //vals_for_oscs = [fund, 2*fund, 3*fund, 4*fund, 5*fund, gain, gain, gain, gain, gain] // Not efficient way to do it
+            //setOscillators(vals_for_oscs)
+            setOscillators(oscillatorVals)
+        }
+    }
+
+    //gainSlider.addEventListener('input', updatePitch);
+    //fundSlider.addEventListener('input', updatePitch);
+    masterSlider.addEventListener('input', updateMaster);
+    /*harmSlider.addEventListener('input', updatePitch);
+    detuneSlider.addEventListener('input', updatePitch);
+    harmPowerSlider.addEventListener('input', updatePitch);*/
+    //osc1GainSlider.addEventListener('input', updatePitch);
+    //updatePitch();
+    updateMaster();
+
+
+    </script>
+
+
+
+
+
+</body>
+</html>

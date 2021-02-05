@@ -12,14 +12,14 @@ def gen_sine_full(frequency, n_samples,fs):
 
 
 
-def gen_sine(freq):
-  return gen_sine_full(freq, 512, 16000)
+def gen_sine(freq, length=512):
+  return gen_sine_full(freq, length, 16000)
 
 
 
 
 
-def gen_complex(freqs, weights):
+def gen_complex(freqs, weights, length=512):
     '''
 
     :param freqs:
@@ -37,7 +37,7 @@ def gen_complex(freqs, weights):
 
     fuck = weights_reshaped * sins
     #fuck_new_dim = tf.reshape(fuck, (*freqs_dim, -1))
-    fuck_new_dim = tf.reshape(fuck, (*freqs_dim, 512))
+    fuck_new_dim = tf.reshape(fuck, (*freqs_dim, length))
     fuck_compressed = tf.reduce_sum(fuck_new_dim, axis=1)
 
     max_fucks = tf.math.abs(fuck_compressed)
@@ -46,7 +46,7 @@ def gen_complex(freqs, weights):
 
     return tf.squeeze(fuck_out)
 
-def params_to_waveform(input_vec):
+def params_to_waveform(input_vec, length=512):
 
   freqs, power_array = get_freqs_powers(input_vec)
 
@@ -56,7 +56,7 @@ def params_to_waveform(input_vec):
   # gen_complex(*tf.cast(get_freqs_powers(fund, n_harmonics, detune_hz, harmonic_power),dtype='float64'))
   waveform = tf.cast(waveform, dtype='float32')
   #waveform = tf.expand_dims(waveform, axis=0)
-  waveform=tf.reshape(waveform, (-1, 512))
+  waveform=tf.reshape(waveform, (-1, length))
 
   return waveform
 
@@ -87,10 +87,35 @@ def gen_complex_stub(freqs, power_array):
 
     return waveform
 
+def calc_rms_sines(amplitudes):
+    '''
+    calculates the rms of a sum of sinusoids:
+
+    https://math.stackexchange.com/questions/974755/root-mean-square-of-sum-of-sinusoids-with-different-frequencies
+     RMS (Root Mean Square) value of a waveform which consists of a sum of
+     sinusoids of different frequencies, is equal to the square root of the
+     sum of the squares of the RMS values of each sinusoid.
 
 
+    :param amplitudes: list of amplitudes of sinusoids
+    :return: rms
+    '''
+
+    RMS_from_peak = 0.707
+
+    amplitudes = np.array(amplitudes)
+    RMSs = RMS_from_peak*amplitudes
+    RMSsquare = RMSs**2
+    total_rms = np.sqrt(np.sum(RMSsquare))
+    return total_rms
 
 def get_freqs_powers(input_vec):  # no loops power array
+    '''
+    Takes 4 parameters as inputs as a vector (hundamental, number of harmonics, detning in hz, and harmonic power)
+    and returns two arrays with frequencies (first array) and magnitudes (second) for pure sines that are generated.
+    :param input_vec:
+    :return:
+    '''
 
     cast_type='float32'
 
@@ -125,31 +150,8 @@ def get_freqs_powers(input_vec):  # no loops power array
 
     return freqs, power_array
 
-  # # takes a vector of 4 values -
-  # # fund = input_vec[0,:]
-  # # n_harmonics = input_vec[1,:]
-  # # detune_hz = input_vec[2,:]
-  # # harmonic_power = input_vec[3,:]
-  #   def get_powers_single_vec(input_vec):
-  #     fund = input_vec[:,0]
-  #     n_harmonics = input_vec[:,1]
-  #     detune_hz = input_vec[:,2]
-  #     harmonic_power = input_vec[:,3]
-  #
-  #     num_elements = 5
-  #
-  #     fund_mask = tf.cast(tf.sequence_mask(1, num_elements), dtype='float64')
-  #     all_harm_mask = tf.cast(tf.logical_not(tf.cast(fund_mask, dtype='bool')), dtype='float64')
-  #
-  #     # all_harm_mask = tf.constant([0,1,1,1, 1], dtype='float64')
-  #     harm_mask = tf.cast(tf.sequence_mask(n_harmonics + 1, num_elements),
-  #                         dtype='float64')  # sets the non-active harminics to 0
-  #
-  #     power_array = tf.cast((fund_mask + harmonic_power * all_harm_mask * harm_mask), dtype='float64')
-  #     detune_array = detune_hz * all_harm_mask * harm_mask
-  #
-  #     harmonic_series = tf.cast((tf.range(num_elements) + 1), dtype='float64')
-  #     freqs = tf.cast(((fund * harmonic_series + detune_array) * harm_mask), dtype='float64')
+#Lamdba function which concatenates the output.
+vec_to_freqpower = tf.function(lambda x: tf.concat(get_freqs_powers(x), axis=1))
 
-  #     return (freqs, power_array)
+
 

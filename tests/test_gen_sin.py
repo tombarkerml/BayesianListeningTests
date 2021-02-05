@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 import soundgen_tf
-from soundgen_tf import gen_complex, get_freqs_powers, params_to_waveform
+from soundgen_tf import gen_complex, get_freqs_powers, params_to_waveform, vec_to_freqpower
 
 class MyTestCase(unittest.TestCase):
     def test_something(self):
@@ -31,6 +31,32 @@ class TestSinGen(unittest.TestCase):
         complex_op = gen_complex(freqs, weights)
 
         self.assertEqual(len(complex_op), 512)
+
+
+    def test_vec_to_freqpower(self):
+        fundamental = 100
+        n_harmonics = 2
+        detune_hz = 5
+        harmonic_weights = 0.5
+
+        test_vector = ([[fundamental, n_harmonics, detune_hz, harmonic_weights],
+                                          [2 * fundamental, n_harmonics + 1, detune_hz * 2, harmonic_weights * 0.5]])
+
+        freqs, powers = get_freqs_powers(test_vector)
+
+        #self.assertEqual(freqs[0, 0], fundamental)
+        #self.assertEqual(freqs[1, 0], 2 * fundamental)
+
+        freqpowers=vec_to_freqpower(test_vector)
+
+
+        self.assertTrue(freqpowers.shape[0]==freqs.shape[0]==powers.shape[0])
+        self.assertTrue(freqpowers.shape[1] == freqs.shape[1] + powers.shape[1])
+
+
+
+
+
 
 
     def test_multiple_gen_complex_dims(self):
@@ -107,7 +133,7 @@ class TestSinGenKeras(unittest.TestCase):
 
 
 
-        xiy=998
+
 
 
 if __name__ == '__main__':
