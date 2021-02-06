@@ -31,8 +31,19 @@
   font: 16px "Open Sans", Helvetica, Arial, sans-serif;
   border: 1px solid #22d;
   padding: 12px;
-  width: 75%;
+  width: 100%;
   text-align: center;
+}
+
+
+@media (min-width: 600px) {
+  .panel {
+    font: 16px "Open Sans", Helvetica, Arial, sans-serif;
+    border: 1px solid #22d;
+    padding: 12px;
+    width: 75%;
+    text-align: center;
+  }
 }
 
 

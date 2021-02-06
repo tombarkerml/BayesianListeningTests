@@ -95,8 +95,8 @@ results_sheet = Sheets_IO(SAMPLE_SPREADSHEET_ID)
 num_responses = 0
 
 test_templates = [ #'compare_sounds.html']
-                  'compare_sounds_inverse.html']
-
+                  #'compare_sounds_inverse.html']
+                'compare_sounds_responsive.html']
 test_template = random.choice(test_templates)
 
 print('we will be using ' + test_template)
