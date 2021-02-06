@@ -31,7 +31,8 @@
   font: 16px "Open Sans", Helvetica, Arial, sans-serif;
   border: 1px solid #22d;
   padding: 12px;
-  width: 100%;
+  width: 95%;
+  margin: auto;
   text-align: center;
 }
 
@@ -43,20 +44,43 @@
     padding: 12px;
     width: 75%;
     text-align: center;
+    margin: auto;
   }
 }
 
 
-div.introtext {
-  width: 500px;
+.introtext {
+  font: 16px "Open Sans", Helvetica, Arial, sans-serif;
+  width: 100%;
+  margin: auto;
+  border: 1px solid #22d;
+  text-align: center;
+}
+
+@media (min-width: 600px) {
+  .introtext  {
+    font: 16px "Open Sans", Helvetica, Arial, sans-serif;
+    border: 1px solid #22d;
+    padding: 12px;
+    width: 75%;
+    text-align: center;
+  }
+}
+
+
+
+div.testContainer {
+  width: 100%;
   margin: auto;
   border: 3px solid #73AD21;
   text-align: center;
 }
 
-div.testContainer {
-  width: 75%;
-  margin: auto;
-  border: 3px solid #73AD21;
-  text-align: center;
+@media (min-width: 600px) {
+  div.testContainer  {
+    width: 75%;
+    margin: auto;
+    border: 3px solid #73AD21;
+    text-align: center;
+  }
 }
