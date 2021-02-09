@@ -63,3 +63,55 @@ class Sheets_IO(object):
             },
             valueInputOption="USER_ENTERED"
         ).execute()
+
+    def get_row_arg(self, sheet_name='Sheet1', sheet_row_start=str(1), sheet_row_end=None):
+        '''
+        :param sheet_name: The name of the sheet
+        :param sheet_row_start: The row to start getting data from
+        :param sheet_row_end: If not specified, we use the same value as sheet_row_start, and get only a single row
+        :return: list of values.
+        '''
+        sheet_row_start=str(sheet_row_start)
+        sheet = self.service.spreadsheets()
+        if sheet_row_end: #not None
+            sheet_row_end=str(sheet_row_end)
+        else:
+            sheet_row_end=str(sheet_row_start)
+
+        SHEET_RANGE = sheet_name +'!' + sheet_row_start + ':' + sheet_row_end
+        return SHEET_RANGE
+
+    def get_batch_rows(self, SHEET_RANGE_LIST):
+        '''
+
+        :param SHEET_RANGE_LIST: a list of sheet ranges to be returned
+        :return:
+        '''
+        sheet = self.service.spreadsheets()
+
+        result = sheet.values().batchGet(
+            spreadsheetId=self.spreadsheet_id, ranges=SHEET_RANGE_LIST).execute()
+
+        ranges = result.get('valueRanges', [])
+        return ranges
+
+    def get_row_from_sheet(self, sheet_name='Sheet1', sheet_row_start=str(1), sheet_row_end=None):
+        '''
+
+        :param sheet_name: The name of the sheet
+        :param sheet_row_start: The row to start getting data from
+        :param sheet_row_end: If not specified, we use the same value as sheet_row_start, and get only a single row
+        :return: list of values.
+        '''
+        sheet_row_start=str(sheet_row_start)
+        sheet = self.service.spreadsheets()
+        if sheet_row_end: #not None
+            sheet_row_end=str(sheet_row_end)
+        else:
+            sheet_row_end=str(sheet_row_start)
+        SAMPLE_RANGE_NAME = 'Class Data!A2:E'
+        SHEET_RANGE = sheet_name +'!' + sheet_row_start + ':' + sheet_row_end
+        result = sheet.values().get(spreadsheetId=self.spreadsheet_id,
+                                    range=SHEET_RANGE).execute()
+        values = result.get('values', [])
+        return values
