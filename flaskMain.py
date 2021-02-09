@@ -29,7 +29,8 @@ Session(app)
 
 app.config['SECRET_KEY'] = 'This_is_the_secret_key_12243523225907662'
 
-SAMPLE_SPREADSHEET_ID = '1P_wU0rU6_rdw0WBomkZm8Ofbkv4AG96N8hmvMo2gXKc'
+SAMPLE_SPREADSHEET_ID = '1IW3prWC6neaXqvNfUXJcHqtuxS3DFIlB5FvFoyqXxXI'
+#SAMPLE_SPREADSHEET_ID = '1P_wU0rU6_rdw0WBomkZm8Ofbkv4AG96N8hmvMo2gXKc'
 #SAMPLE_SPREADSHEET_ID = '1JGRd59WRZ7nr6cgwKJz_IKicDfZutj2UtcjHkC5IOBk'
 results_sheet = Sheets_IO(SAMPLE_SPREADSHEET_ID)
 
@@ -42,10 +43,12 @@ class CalibrationForm(Form):
     radio_group = RadioField('label', choices=[('headphones','Headphones'),('loudspeakers','Loudspeakers')], validators=[validators.InputRequired()])
     f = FloatField(validators=[validators.InputRequired()])
 
-decoder = tf.keras.models.load_model('models/decoder_4_params_fitted')
-x_batch_mean = np.array([1.52481007e+03, 1.50019014e+00, 3.25621367e-02, 5.00145407e-01])
-x_batch_std = np.array([8.51702500e+02, 1.11811500e+00, 5.72985211e+01, 2.88592207e-01])
-
+#decoder = tf.keras.models.load_model('models/decoder_4_params_fitted')
+decoder = tf.keras.models.load_model('models/master_VAE/VAE_sin_parameters_4_higher_kl/decoder')
+#x_batch_mean = np.array([1.52481007e+03, 1.50019014e+00, 3.25621367e-02, 5.00145407e-01])
+#x_batch_std = np.array([8.51702500e+02, 1.11811500e+00, 5.72985211e+01, 2.88592207e-01])
+x_batch_mean = np.array([1.52404555e+03, 1.50050163e+00, 7.55882263e-03, 4.99974079e-01])
+x_batch_std = np.array([8.51562896e+02, 1.11773102e+00, 5.73145759e+01, 2.88692592e-01])
 range_val = 3
 space = [Real(-range_val, range_val, name='X'),
              Real(-range_val, range_val, name='Y')]
@@ -183,6 +186,20 @@ def session_user_ID():
         session['user_ID'] = get_random_string(12)
         return session.get('user_ID')
 
+def get_validation_vals():
+    if 'validation_vals' in session:
+        return session.get('validation_vals')
+    else:
+        session['validation_vals'] = validate_vals()
+        return session.get('validation_vals')
+
+def session_validation_results():
+    if 'validation_results' in session:
+        return session.get('validation_results')
+    else:
+        session['validation_results'] = []
+        return session.get('validation_results')
+
 def session_master_vol(vol=1):
     if 'master_vol' in session:
         return session.get('master_vol')
@@ -202,6 +219,87 @@ def get_noise_vol():
 
 def get_slider_range():
     return random.randint(2, 5)
+
+
+def validate_vals():
+    '''
+    Get the lowest value from each row of the spreadsheet and use it to generate a sample for testing.
+    :return:
+    '''
+
+    #Get list of points and minima from each trial:
+    #lowdim minima
+    minvals_low = []
+    minvals_high = []
+    lowvals=[]
+
+
+    n_results = 30
+    BATCH_SHEET_RANGE = []
+
+    #low dimension
+    BATCH_SHEET_RANGE = []
+    for n in range(0, n_results):
+        BATCH_SHEET_RANGE.append(results_sheet.get_row_arg('Sheet1', n * 6 + 6))
+        BATCH_SHEET_RANGE.append(results_sheet.get_row_arg('Sheet1', n * 6 + 3, n * 6 + 4))
+
+    low_dim_res = results_sheet.get_batch_rows(BATCH_SHEET_RANGE) # all the results. even rows y values, odd rows X (2dims).
+    #organise the reslts. Every 1 row is val (y), 2 row is X(2 dimensions)
+    for i in range(0, int(len(low_dim_res)/2)):
+        if 'values' in low_dim_res[2*i]:
+            tempdict = {}
+            tempdict['y_elem'] = low_dim_res[2*i]['values']
+            tempdict['X_elem'] = low_dim_res[2*i+1]['values']
+            min_value_index = np.argmin(tempdict['y_elem'])
+            minvals_low.append([float(tempdict['X_elem'][0][min_value_index]), float(tempdict['X_elem'][1][min_value_index])])
+
+    #right, now take all the values, and convert to format for synth
+
+    low_decoded = []
+    for item in minvals_low:
+        low_decoded.append(np.squeeze(np.abs(get_synth_params(item))).tolist())
+        #get_synth_params(next_x)
+        #vals = np.squeeze(np.abs(get_synth_params(next_x))).tolist()
+
+    #High dimension:
+    BATCH_SHEET_RANGE = []
+    for n in range(0, n_results):
+        BATCH_SHEET_RANGE.append(results_sheet.get_row_arg('Sheet2', n * 8 + 8))
+        BATCH_SHEET_RANGE.append(results_sheet.get_row_arg('Sheet2', n * 8 + 3, n * 8 + 6))
+    high_dim_res = results_sheet.get_batch_rows(BATCH_SHEET_RANGE)
+    # organise the reslts. Every 1 row is val (y), 2nd row is X(4 dimensions)
+    for i in range(0, int(len(high_dim_res)/2)):
+        if 'values' in high_dim_res[2 * i]:
+            tempdict = {}
+            tempdict['y_elem'] = high_dim_res[2 * i]['values']  # every otehr row
+            tempdict['X_elem'] = high_dim_res[2 * i + 1]['values']
+            min_value_index = np.argmin(tempdict['y_elem'])
+            minvals_high.append([float(tempdict['X_elem'][0][min_value_index]), float(tempdict['X_elem'][1][min_value_index]), float(tempdict['X_elem'][2][min_value_index]), float(tempdict['X_elem'][3][min_value_index])])
+
+    high_decoded = []
+    for item in minvals_high:
+        high_decoded.append(get_freqs_powers([item]))
+
+    all_vals_list =[]
+
+    for item in high_decoded:
+        vals = np.squeeze(tf.concat(item, axis=1).numpy()).tolist()
+
+
+        tempdict={'values': vals, 'type': 'high'}
+
+        all_vals_list.append(tempdict)
+
+    for item in low_decoded:
+
+
+        tempdict = {'values': item, 'type': 'low'}
+
+        all_vals_list.append(tempdict)
+
+    random.shuffle(all_vals_list)
+
+    return all_vals_list
 
 
 @app.route('/start')
@@ -305,6 +403,10 @@ def get_instructions():
         content = f.read()
     return content
 
+
+
+
+
 @app.route('/b', methods=['POST', 'GET'])
 @app.route('/highdim', methods=['POST', 'GET'])
 def highdim(dim4_params=[[1000.0, 1, 0, 0.5]]):
@@ -322,19 +424,16 @@ def highdim(dim4_params=[[1000.0, 1, 0, 0.5]]):
 
 
 
-    if len(opt_big_space.Xi) >= session_n_trials()-1:
-        print('Alright kid, enough already!')
-        session['highdim_complete'] = True
-        return pause()
 
 
 
-        coords = np.array(opt_big_space.Xi).transpose().tolist()
 
-        res = np.array(opt_big_space.yi).transpose().tolist()
+        #coords = np.array(opt_big_space.Xi).transpose().tolist()
 
-        results_to_write = [['Xi']] + coords + [['res']] + [res]
-        results_sheet.append_to_sheet(results_to_write, 'Sheet2')
+        #res = np.array(opt_big_space.yi).transpose().tolist()
+
+        #results_to_write = [['Xi']] + coords + [['res']] + [res]
+        #results_sheet.append_to_sheet(results_to_write, 'Sheet2')
 
     vals = np.squeeze(vec_to_freqpower(dim4_params).numpy()).tolist()
 
@@ -377,7 +476,18 @@ def highdim(dim4_params=[[1000.0, 1, 0, 0.5]]):
         session.modified = True
 
         trial_number = len(opt_big_space.Xi) + 1
-        return render_template(test_template, calib_vol = session_master_vol(), vals=json.dumps(vals), form=form, content=get_instructions(), slider_range=get_slider_range(), trial=trial_number, n_trials=session_n_trials(), noise_vol=noise_vol)
+
+        if len(opt_big_space.Xi) > session_n_trials() - 1:
+            print('Alright kid, enough already!')
+            session['highdim_complete'] = True
+            session.modified = True
+            return pause()
+
+
+
+        else:
+
+         return render_template(test_template, calib_vol = session_master_vol(), vals=json.dumps(vals), form=form, content=get_instructions(), slider_range=get_slider_range(), trial=trial_number, n_trials=session_n_trials(), noise_vol=noise_vol)
 
     else:
         next_x = [opt_big_space.ask()]
@@ -411,10 +521,7 @@ def lowdim(xy=[2.0, 2.0]):
 
     opt=jsonpickle.decode(session_optimizer())
 
-    if len(opt.Xi) >= session_n_trials()-1:
-        print('Alright kid, enough already!')
-        session['lowdim_complete'] = True
-        return pause()
+
 
 
 
@@ -422,7 +529,7 @@ def lowdim(xy=[2.0, 2.0]):
     form = InputForm(request.form)
 
     #xy = [2.0, 2.0]
-    vals = np.squeeze(np.abs(get_synth_params(xy))).tolist()
+    #vals = np.squeeze(np.abs(get_synth_params(xy))).tolist()
 
     #vals = [100, 200, 300, 400, 500, 0.1, 0.1, 0.1, 0.1, 0.1]
 
@@ -450,14 +557,21 @@ def lowdim(xy=[2.0, 2.0]):
         next_x = opt.ask()
         print('next point to evaluate is ' + str(next_x))
         vals = np.squeeze(np.abs(get_synth_params(next_x))).tolist()
-
+        print("Synthing the following sines:" + str(vals))
 
         session['opt'] = jsonpickle.encode(opt)
         session.modified = True
 
         trial_number = len(opt.Xi) + 1
 
-        return render_template(test_template, calib_vol = session_master_vol(), vals=json.dumps(vals), form=form, content=get_instructions(), slider_range=get_slider_range(), trial=trial_number, n_trials=session_n_trials(), noise_vol=noise_vol)
+        if len(opt.Xi) > session_n_trials() - 1:
+            print('Alright kid, enough already!')
+            session['lowdim_complete'] = True
+            session.modified = True
+            return pause()
+
+        else:
+            return render_template(test_template, calib_vol = session_master_vol(), vals=json.dumps(vals), form=form, content=get_instructions(), slider_range=get_slider_range(), trial=trial_number, n_trials=session_n_trials(), noise_vol=noise_vol)
 
     else:
         next_x = opt.ask()
@@ -470,6 +584,79 @@ def lowdim(xy=[2.0, 2.0]):
         trial_number = len(opt.Xi) + 1
 
         return render_template(test_template, calib_vol = session_master_vol(), vals=json.dumps(vals), form=form, content=get_instructions(), slider_range=get_slider_range(), trial=trial_number, n_trials=session_n_trials(), noise_vol=noise_vol)
+
+def write_validation_sheet(results):
+
+    res_formatted = []
+
+    for res in results:
+        little_list = [res[1]] + [res[2]] + res[0]
+        res_formatted.append(little_list)
+    results_sheet.append_to_sheet(res_formatted, 'Sheet9')
+
+
+@app.route('/validate', methods=['POST', 'GET'])
+def validate():
+
+    noise_vol=1
+    all_vals_list = get_validation_vals()
+
+    session.modified = True
+
+
+
+    curr_validation_results = session_validation_results()
+    trial_number = len(curr_validation_results)+1
+
+    if trial_number>30:
+        print ('Ey! We validated it!')
+        #save results to sheet.
+        write_validation_sheet(curr_validation_results)
+        #results_sheet.append_to_sheet(curr_validation_results, 'Validation')
+        return render_template("thanks.html")
+
+    form = InputForm(request.form)
+
+    if request.method == 'POST' and form.validate():
+
+
+        data_previous = all_vals_list.pop()
+        session['validation_vals'] = all_vals_list
+        vals_previous = data_previous['values']
+        amplitudes = vals_previous[5:]
+        rms_previous = calc_rms_sines(amplitudes)
+        noise_val_previous = 1
+        print("previous vals = " + str(vals_previous))
+
+
+        r = form.r.data
+        #tone_rms = r/rms_previous
+        #tone_rms = r*rms
+        #the volume of the tone
+        f_val = get_adjusted_f_val( r,rms_previous, noise_val_previous)
+        print('giving optimizer values from input ' + str(vals_previous) + ' to yield audibility of ' + str(f_val))
+
+        next_x = all_vals_list[-1]['values']
+        print('next point to evaluate is ' + str(next_x))
+
+
+        curr_validation_results.append([vals_previous, f_val, data_previous['type']])
+        session['validation_results'] = curr_validation_results
+        session.modified = True
+
+        vals = all_vals_list[-1]['values']
+
+        #trial_number = len(curr_validation_results)
+
+        return render_template(test_template, calib_vol = session_master_vol(), vals=json.dumps(vals), form=form, content=get_instructions(), slider_range=get_slider_range(), trial=trial_number, n_trials=30, noise_vol=noise_vol)
+
+    else:
+        vals = all_vals_list[-1]['values']
+
+
+        return render_template(test_template, calib_vol = session_master_vol(), vals=json.dumps(vals), form=form, content=get_instructions(), slider_range=get_slider_range(), trial=trial_number, n_trials=30, noise_vol=noise_vol)
+
+
 
 @app.route('/changetone', methods=['POST', 'GET'])
 def changetone(xy=[2.0, 2.0]):
